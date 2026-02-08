@@ -1,0 +1,10 @@
+Garidomakaronada_Template
+fonts/
+February_2025/
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk

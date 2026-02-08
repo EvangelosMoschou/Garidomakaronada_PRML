@@ -1,0 +1,285 @@
+\documentclass[a4paper,11pt]{article}
+
+%======================================================================
+%	PACKAGES & FONTS (Organic Handwriting Style - Inconspicuous)
+%======================================================================
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{greek}
+\setotherlanguage{english}
+
+% Use Mynerve for everything - uniform organic look
+\setmainfont[
+    Path = fonts/mynerve/,
+    Extension = .ttf,
+    UprightFont = Mynerve-Regular,
+    BoldFont = Mynerve-Regular,
+    ItalicFont = Mynerve-Regular,
+    BoldItalicFont = Mynerve-Regular,
+    AutoFakeBold = 2.5 % Heavier stroke for "marker" effect
+]{Mynerve-Regular}
+
+\setsansfont[
+    Path = fonts/mynerve/,
+    Extension = .ttf,
+    UprightFont = Mynerve-Regular,
+    BoldFont = Mynerve-Regular,
+    ItalicFont = Mynerve-Regular,
+    BoldItalicFont = Mynerve-Regular,
+    AutoFakeBold = 1.5
+]{Mynerve-Regular}
+
+\setmonofont[
+    Path = fonts/mynerve/,
+    Extension = .ttf,
+    UprightFont = Mynerve-Regular,
+    BoldFont = Mynerve-Regular,
+    ItalicFont = Mynerve-Regular,
+    BoldItalicFont = Mynerve-Regular,
+    AutoFakeBold = 1.5
+]{Mynerve-Regular}
+
+\newfontfamily\greekfont[
+    Path = fonts/mynerve/,
+    Extension = .ttf,
+    UprightFont = Mynerve-Regular,
+    BoldFont = Mynerve-Regular,
+    ItalicFont = Mynerve-Regular,
+    BoldItalicFont = Mynerve-Regular,
+    AutoFakeBold = 1.5
+]{Mynerve-Regular}
+
+% ═══════════════════════════════════════════════════════════════
+% LUA RANDOMIZATION (Organic Flow)
+% ═══════════════════════════════════════════════════════════════
+\directlua{
+    local glyph_id = node.id("glyph")
+    local literal_id = node.id("pdf_literal")
+    if not literal_id then literal_id = node.id("whatsit") end
+    local nut = node.direct
+    local new_node = nut.new
+    local getid = nut.getid
+    local getnext = nut.getnext
+    local setfield = nut.setfield
+    local insert_before = nut.insert_before
+    local insert_after = nut.insert_after
+    local to_direct = nut.todirect
+    math.randomseed(os.time())
+    function randomize_text(head)
+        local head_nut = to_direct(head)
+        local current = head_nut
+        while current do
+            local next_node = getnext(current)
+            if getid(current) == glyph_id then
+                -- Subtle rotation
+                local ang = math.rad(math.random(-15, 15) / 20.0)
+                local c, s = math.cos(ang), math.sin(ang)
+                local s_start = string.format("q \%.5f \%.5f \%.5f \%.5f 0 0 cm", c, s, -s, c)
+                
+                local n_start = new_node(literal_id)
+                setfield(n_start, "data", s_start)
+                local n_end = new_node(literal_id)
+                setfield(n_end, "data", "Q")
+                
+                head_nut = insert_before(head_nut, current, n_start)
+                insert_after(head_nut, current, n_end)
+                
+                -- Baseline jitter (Natural unevenness)
+                local jitter_y = math.random(-3000, 3000)
+                nut.sety_offset(current, (nut.gety_offset(current) or 0) + jitter_y)
+            end
+            current = next_node
+        end
+        return nut.tonode(head_nut)
+    end
+    luatexbase.add_to_callback("pre_linebreak_filter", randomize_text, "randomize_text")
+    luatexbase.add_to_callback("hpack_filter", randomize_text, "randomize_text_hpack")
+}
+
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{multicol}
+\usepackage[top=0.3cm, bottom=0.3cm, left=0.3cm, right=0.3cm, footskip=0cm]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{tikz}
+
+% Colors - Blue Ink look
+\definecolor{inkcolor}{RGB}{0, 10, 60} 
+\color{inkcolor}
+
+% Layout Settings
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\setlength{\columnsep}{0.4cm}
+\setlength{\columnseprule}{0.1pt} % Subtle line between columns
+\renewcommand{\columnseprulecolor}{\color{inkcolor!20}} % Very faint sep
+
+\linespread{0.95}
+
+% Custom Section Header - Looks like underlined handwriting
+\newcommand{\handsection}[1]{%
+    \vspace{6pt}
+    \begingroup
+    \fontsize{10}{11}\selectfont\bfseries #1
+    \endgroup
+    \par\vspace{2pt}
+    \hrule height 0.5pt width 100\% \relax
+    \vspace{2pt}
+}
+
+% Customize lists to look like doodles
+\setlist[itemize]{label={--}, leftmargin=8pt, itemsep=0pt, topsep=1pt, parsep=0pt}
+\setlist[enumerate]{label={\arabic*.}, leftmargin=10pt, itemsep=0pt, topsep=1pt, parsep=0pt}
+
+\begin{document}
+\pagestyle{empty}
+\fontsize{8.5}{9.5}\selectfont
+
+\begin{multicols*}{3}
+
+% ---------------------------------------------------------
+\handsection{1. Αξιολόγηση \& Μετρικές}
+\textbf{Confusion Matrix:} Acc=$\frac{TP+TN}{N}$ | Prec=$\frac{TP}{TP+FP}$ \\
+Rec=$\frac{TP}{TP+FN}$ | Spec=$\frac{TN}{TN+FP}$ | $F1 = \frac{2PR}{P+R}$. \\
+\textbf{Medical Bayes:} $P(Diseas|+) = \frac{Sens \cdot Prev}{Sens \cdot Prev + (1-Spec)(1-Prev)}$. \\
+\textbf{Errors:} $MSE = \frac{1}{N}\sum(y-\hat{y})^2$. $R^2 = 1 - \frac{RSS}{TSS}$. \\
+\textbf{Bias-Var:} $Err = Bias^2 + Var + Noise$. \\
+$\bullet$ High Bias $\to$ Underfit (Simple). $\bullet$ High Var $\to$ Overfit (Complex). \\
+\textbf{ROC/AUC:} Plot TPR vs FPR. Random=0.5, Perfect=1. \\
+\textbf{Cross-Val:} k-Fold (Low Bias/Var est), Hold-out (Fast).
+
+% ---------------------------------------------------------
+\handsection{2. Probabilities \& Info}
+\textbf{Bayes:} $P(h|d) \propto P(d|h)P(h)$ (Post~Lik~Prior). \\
+\textbf{Bayes Risk:} Choose action w/ min exp. loss. \\
+\textbf{Gauss:} $\mathcal{N} \sim |\Sigma|^{-1/2} e^{-\frac{1}{2}(x-\mu)^T \Sigma^{-1} (x-\mu)}$. \\
+MLE: $\hat{\mu} = \bar{x}$, $\hat{\sigma}^2 = \frac{1}{N}\sum(x-\mu)^2$ (Biased). Unbiased: divide $N-1$. \\
+\textbf{Entropy:} $H(P) = -\sum P \log P$. Max at uniform. \\
+\textbf{KL Div:} $D_{KL} = \sum P \ln \frac{P}{Q}$. \textbf{CrossEnt:} $H(P,Q) = H(P)+D_{KL}$. \\
+\textbf{MLE:} $\max \sum \ln P(x|\theta)$. $\nabla \ln L = 0$.
+
+% ---------------------------------------------------------
+\handsection{3. Γραμμικά Μοντέλα}
+\textbf{LinReg:} $w=(X^TX)^{-1}X^Ty$. ($O(N^3)$). \\
+\textbf{LogReg:} $P = \sigma(w^Tx) = \frac{1}{1+e^{-z}}$. Convex Loss. \\
+$\sigma' = \sigma(1-\sigma)$. Update: $w \leftarrow w + \eta(y-\hat{y})x$. \\
+\textbf{LDA:} Max Sep $J(w) = \frac{w^T S_B w}{w^T S_W w}$. \\
+$S_B=(m_2-m_1)(m_2-m_1)^T$. $S_W=\sum S_i$. \\
+Opt: $w \propto S_W^{-1}(m_2-m_1)$. Assumes equal $\Sigma$. \\
+\textbf{Geometry:} Hyperplane $w^Tx+w_0=0$. \\
+Dist $r = y(x)/||w||$. $w \perp$ surface. \\
+\textbf{Regularization (Shrinkage):} \\
+L1 (Lasso): $\lambda|w|$ (Sparsity/Selection). \\
+L2 (Ridge): $\lambda w^2$ (Small weights).
+
+% ---------------------------------------------------------
+\handsection{4. SVM \& Kernels}
+\textbf{Primal:} $\min \frac{1}{2}||w||^2 + C \sum \xi_i$ s.t. $y_i(w^Tx_i+b) \ge 1-\xi_i$. \\
+\textbf{Convex:} Global minimum guaranteed. \\
+\textbf{Support Vectors:} Points on margin ($y(\cdot)=1$) or errors. Only these affect $w$. \\
+\textbf{Margin:} $2/||w||$. Larger C $\to$ Harder (Sm margin). \\
+\textbf{Slacks $\xi$:} 0 (correct), $0\!<\!\xi\!<\!1$ (margin vio), $\xi \!>\! 1$ (error). \\
+\textbf{Kernel Trick:} $x^T z \to K(x,z)$. Implicit high dim. \\
+$\bullet$ Poly: $(x^T z + c)^d$. Dim $\approx d$-order terms. \\
+$\bullet$ RBF: $e^{-\gamma||x-z||^2}$. Dim $\infty$. (Taylor exp). \\
+\textbf{Geometry:} Max margin boundary is $\perp$ bisector of closest points from classes.
+
+% ---------------------------------------------------------
+\handsection{5. Neural Networks}
+\textbf{Non-Convex:} Local optima possible. \\
+\textbf{Unit:} $z = \sum w_i x_i + b \to a = g(z)$. \\
+\textbf{Activ:} ReLU $\max(0,z)$ (Fast, no vanish grad). \\
+Sigmoid (0,1), Tanh (-1,1) (Sat at limits). \\
+\textbf{Softmax:} $y_k = e^{z_k}/\sum e^{z_j}$. For Multi-class. \\
+\textbf{Forward:} $Z^{[l]} = W^{[l]}A^{[l-1]}+b^{[l]}, A^{[l]}=g(Z^{[l]})$. \\
+\textbf{Backprop:} Chain rule $\frac{\partial J}{\partial W}$. \\
+$\delta^L = (a^L-y)$, $\delta^l = (W^{l+1})^T \delta^{l+1} \cdot g'(z^l)$. \\
+$\partial J / \partial W^l = \delta^l (a^{l-1})^T$. \\
+\textbf{Params:} FC: $(N_{in}+1)N_{out}$. \\
+\textbf{CNN:} $Out = \lfloor \frac{W-K+2P}{S} \rfloor + 1$. \\
+Params: $F \times F \times C_{in} \times C_{out} + C_{out}$. \\
+\textbf{Optim:} SGD (Noisy), Batch (Slow), Mini-batch. \\
+Momentum (Velocity), Adam (Adapt LR).
+
+% ---------------------------------------------------------
+\handsection{6. Ensembles}
+\textbf{Bagging:} Bootstrap (replace) + Parallel Models. \\
+Reduces \textbf{Variance}. Ex: Random Forest. \\
+\textbf{Random Forest:} Bagging + Feature subset ($\sqrt{p}$). \\
+Decorrelates trees -> Better reduction of var. \\
+\textbf{Boosting:} Sequential. Fix prev errors. \\
+Reduces \textbf{Bias} (and Var). Ex: AdaBoost, XGB. \\
+\textbf{AdaBoost:} Weights $\alpha_t = \frac{1}{2}\ln \frac{1-\epsilon}{\epsilon}$. \\
+Data weights $D_{t+1} \propto D_t e^{-\alpha y \hat{y}}$ (Focus Hard). \\
+\textbf{Trees:} Split: Max InfoGain ($H_{pre} - H_{post}$). \\
+Entropy $-\sum p \log p$, Gini $1-\sum p^2$.
+
+% ---------------------------------------------------------
+\handsection{7. Unsupervised \& PCA}
+\textbf{PCA:} Max Variance directions (Ortho). \\
+1. Center ($x-\mu$). 2. Cov $\Sigma = \frac{1}{N}X^TX$. 3. Eigendecomp $U\Lambda U^T$. \\
+Proj $z = U_k^T x$. Var ratio $\sum_1^k \lambda_i / \sum \lambda_{all}$. \\
+Included '1' feature doesn't change PCA (const var=0). \\
+\textbf{K-Means:} Iterate: Assign closest, Update centroids. \\
+Converges finite steps. Spherical clusters. Sensitive to K/Init. \\
+\textbf{GMM:} Soft K-means. Probabilistic ($\pi, \mu, \Sigma$). \\
+\textbf{EM Algo:} Max Likelihood (local max). \\
+E-step: Calc responsibilities $\gamma$. M-step: Update params. \\
+\textbf{DBSCAN:} Density. core/border/noise. Args: eps, minPts. \\
+\textbf{Hierarchical:} Agglomerative. \\
+Linkage: Single (min dist), Complete (max), Avg. \\
+\textbf{Silhouette:} $\frac{b-a}{\max(a,b)}$. +1 Good, 0 Border, -1 Wrong.
+
+% ---------------------------------------------------------
+\handsection{8. KNN \& Dim Reduction}
+\textbf{KNN:} Lazy. Distances ($L_2$). \\
+Small k $\to$ High Var (Noise). Large k $\to$ High Bias (Smooth). \\
+\textbf{Curse of Dim:} Vol grows exp. Points equidistant. \\
+Need exp data. Solutions: PCA, Feature Sel.
+
+% ---------------------------------------------------------
+\handsection{9. True/False Exam Bible (1/2)}
+\textit{-- SVM Objective:} Convex Quatratic (Global Min). \\
+\textit{-- NN Objective:} Non-Convex (Local Min). \\
+\textit{-- EM Algo:} Maximizes Likelihood (Local Max). \\
+\textit{-- K-Means:} Loss decreases monotonically. Converges. \\
+\textit{-- RBF Feature Space:} Infinite dimensional. \\
+\textit{-- PCA:} Adding const feature -> No change. \\
+\textit{-- Perceptron:} Oscillates if not lin sep. \\
+\textit{-- Hard Margin SVM:} Requires lin sep. \\
+\textit{-- Bootstrapping:} Sampling WITH replacement.
+
+% ---------------------------------------------------------
+\handsection{10. True/False Exam Bible (2/2)}
+\textit{-- L1 Reg:} Sparsity (Feat Sel). L2: Small Weights. \\
+\textit{-- Bias-Var:} 1-NN (High Var), K-NN (High Bias). \\
+\textit{-- Kernel Trick:} $w$ is lin comb of data (Representer). \\
+\textit{-- Softmax:} Used for Multi-class Output. \\
+\textit{-- Linear Activ in Hidden:} Collapse to linear model. \\
+\textit{-- Generative:} Naive Bayes, GMM, LDA. \\
+\textit{-- Discriminative:} LogReg, SVM, NN, KNN. \\
+\textit{-- Decision Trees:} Pruning reduces overfitting.
+
+% ---------------------------------------------------------
+\handsection{11. Quick Math/Formulas}
+\textbf{Logarithms:} $\ln(xy)=\ln x+\ln y$, $\ln(e^x)=x$. \\
+\textbf{Derivatives:} $\frac{d}{dx} \sigma(x) = \sigma(1-\sigma)$. \\
+\textbf{Matrix:} $(AB)^T = B^T A^T$. $\nabla_x w^Tx = w$. \\
+$\nabla_x x^TAx = (A+A^T)x$. \\
+\textbf{Distances:} $L_1$ Manhattan $\sum|x|$, $L_2$ Euclidean $\sqrt{\sum x^2}$. \\
+\textbf{Eigen:} $Av = \lambda v$. $\det(A-\lambda I)=0$. \\
+\textbf{Normal:} $68\%$ ($1\sigma$), $95\%$ ($2\sigma$), $99.7\%$ ($3\sigma$).
+
+% ---------------------------------------------------------
+\handsection{12. Algorithm Summary}
+\textbf{Naive Bayes:} $P(y|x) \propto P(y) \prod P(x_i|y)$. Fast, High Bias. \\
+\textbf{LogReg:} Linear boundary. Intepretable. P-values. \\
+\textbf{SVM:} Max Margin. Robust. Kernels $\to$ Non-Lin. \\
+\textbf{DT:} Non-parametric. Interp. Orthogonal splits. \\
+\textbf{RF/GBM:} Black-box. High Acc. Robust. \\
+\textbf{NN:} Univ approx. Needs data/compute. Non-convex. \\
+\textbf{K-Means:} Simple. Scalable. Convex clusters only.
+
+\end{multicols*}
+\end{document}
